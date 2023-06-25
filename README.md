@@ -11,12 +11,10 @@
 `-- libraries               --- 存储库代码和文档
     |-- ads1115                 --- 以库的名称建立文件夹，分类存储库代码和文档
     |   |-- README.md               --- 应用指导文档
-    |   |-- ads1115.md              --- 接口说明文档
     |   |-- ads1115.py              --- 库代码
     |   `-- ads1115_demo.py         --- demo示例
     `-- bmp280              --- 同上
         |-- README.md
-        |-- bmp280.md
         |-- bmp280.py
         `-- bmp280_demo.py
 ```
