@@ -1,14 +1,16 @@
-# 电池功能模块 用户指导手册
+# Battery Module User Guide
 
-## 简介
+[[中文](./README-zh.md)]
 
-> 该模块用于查询当前设备的电池电量与电压, 设备的充电状态。
+## Introduction
 
-## API说明
+> This module is used to query the battery level, voltage, and charging status of the current device.
 
-### 实例化对象
+## API Documentation
 
-**示例:**
+### Instantiate an Object
+
+**Example:**
 
 ```python
 from battery import Battery
@@ -20,19 +22,19 @@ stdby_gpion = 1
 battery = Battery(adc_args=adc_args, chrg_gpion=chrg_gpion, stdby_gpion=stdby_gpion)
 ```
 
-**参数:**
+**Parameters:**
 
-|参数|类型|说明|
+|Parameter|Type|Description|
 |:---|---|---|
-|adc_args|tuple|元素1: [ADC通道](https://python.quectel.com/doc/API_reference/zh/peripherals/misc.ADC.html#%E5%B8%B8%E9%87%8F), 元素2: ADC循环读取次数, 元素3: 计算系数, 可选|
-|chrg_gpion|int|CHRG （引脚 1）：漏极开路输出的充电状态指示端。可选|
-|stdby_gpion|int|STDBY （引脚 5）：电池充电完成指示端。可选|
+|`adc_args`|tuple|Element 1: [ADC channel](https://python.quectel.com/doc/API_reference/en/peripherals/misc.ADC.html#Constants).<br>Element 2: Number of ADC readings in a loop.<br>Element 3: Calculation factor, optional.|
+|`chrg_gpion`|int|CHRG (Pin 1): Charging status indication with open-drain output (Optional).|
+|`stdby_gpion`|int|STDBY (Pin 5): Battery charging completion indication (Optional).|
 
 ### set_charge_callback
 
-> 充电事件回调函数
+> Charging event callback function
 
-**示例:**
+**Example:**
 
 ```python
 def charge_callback(charge_status):
@@ -41,97 +43,96 @@ def charge_callback(charge_status):
 res = battery.set_charge_callback(charge_callback)
 ```
 
-**参数:**
+**Parameters:**
 
-|参数|类型|说明|
+|Parameter|Type|Description|
 |:---|---|---|
-|charge_callback|function|充电事件回调函数, 回调函数参数为设备充电状态: 0-未充电;1-充电中;2-充电完成|
+|charge_callback|function|Charging event callback function, callback function parameter is the device charging status:<br>0 - not charging.<br>1 - charging.<br>2 - charging completed.|
 
-**返回值:**
+**Returns:**
 
-|数据类型|说明|
+|Data Type|Description|
 |:---|---|
-|bool|`True`成功, `False`失败|
+|bool|`True` for success, `False` for failure|
 
 ### set_temp
 
-> 设置当前设备所处工作环境温度, 用于计算设备电池电量
+> Set the current working environment temperature of the device for calculating the device's battery level.
 
-**示例:**
+**Example:**
 
 ```python
 res = battery.set_temp(20)
 ```
 
-**参数:**
+**Parameters:**
 
-|参数|类型|说明|
+|Parameter|Type|Description|
 |:---|---|---|
-|temp|int/float|温度值, 单位:摄氏度 |
+|temp|int/float|Temperature value, unit: Celsius|
 
-**返回值:**
+**Returns:**
 
-|数据类型|说明|
+|Data Type|Description|
 |:---|---|
-|bool|`True`成功, `False`失败|
+|bool|`True` for success, `False` for failure|
 
 ### voltage
 
-> 查询电池电压
+> Query the battery voltage
 
-**示例:**
+**Example:**
 
 ```python
 battery.voltage
 # 523
 ```
 
-**返回值:**
+**Returns:**
 
-|数据类型|说明|
+|Data Type|Description|
 |:---|---|
-|int|电池电压, 单位mV。|
+|int|Battery voltage, unit: mV|
 
 ### energy
 
-> 查询电池电量
+> Query the battery level
 
-**示例:**
+**Example:**
 
 ```python
 res = battery.energy
 # 100
 ```
 
-**返回值:**
+**Returns:**
 
-|数据类型|说明|
+|Data Type|Description|
 |:---|---|
-|int|电池电量百分比, 0~100。|
+|int|Battery level in percentage, 0~100|
 
 ### charge_status
 
-> 查询充电状态
+> Query the charging status
 
-**示例:**
+**Example:**
 
 ```python
 battery.charge_status
-# 1
 ```
 
-**返回值:**
+**Returns:**
 
-|数据类型|说明|
+|Data Type|Description|
 |:---|---|
-|int|0-未充电<br>1-充电中<br>2-充电完成|
+|int|0 - Not charging<br>1 - Charging<br>2 - Charging completed|
 
-## 使用示例
+## Usage Example
 
 ```python
 from battery import Battery
 
-# 实例化对象
+# Instantiate the object
 adc_args = (adc_num, adc_period, factor)
 chrg_gpion = 0
 stdby_gpion = 1
@@ -140,24 +141,24 @@ battery = Battery(adc_args=adc_args, chrg_gpion=chrg_gpion, stdby_gpion=stdby_gp
 def charge_callback(charge_status):
     print(charge_status)
 
-# 设置充电状态回调函数
+# Set the charging status callback function
 battery.set_charge_callback(charge_callback)
 # True
 
-# 设置当前设备温度
+# Set the current device temperature
 temp = 30
 battery.set_temp(temp)
 # True
 
-# 获取当前电池电压
+# Get the current battery voltage
 battery.voltage
 # 3000
 
-# 获取当前电池电量
+# Get the current battery level
 battery.energy
 # 100
 
-# 获取当前充电状态
+# Get the current charging status
 battery.charge_status
 # 1
 

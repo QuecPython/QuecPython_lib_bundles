@@ -1,6 +1,6 @@
 # QuecPython_lib_bundles 代码提交说明
 
-[[英文](./README.md)]
+[[English](./README.md)]
 
 ## 目录结构示例
 
