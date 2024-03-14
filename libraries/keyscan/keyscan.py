@@ -23,8 +23,32 @@ key_evt_queue = Queue(8)
 
 def key_evt_thread_entry():
     while True:
-        self, event = key_evt_queue.get()
-        self.event_cb(self, event)
+        self, msg_type, args = key_evt_queue.get()
+
+        if msg_type == self.MsgType.MSG_TYPE_EXIT_CB:
+            sleep_ms(self.debounse_ms)
+            gpio = Pin(args[0], Pin.IN, Pin.PULL_PU, 1)
+            level = gpio.read()
+            event = None
+                    
+            if level == self.level_on_pressed:
+                event = self.Event.PRESSED
+            else:
+                event = self.Event.RELEASED
+
+            if event & self.cared_event:
+                self.event_cb(self, event)
+
+            if event == self.Event.PRESSED:
+                self.sec = 0
+                self.timer.start(1000, 1, self.timer_cb)
+            else:
+                self.timer.stop()
+
+            if self.work_mode == self.WorkMode.CONTINUOUS:
+                self.enable()
+        else:
+            self.event_cb(self, args)
 
 _thread.start_new_thread(key_evt_thread_entry, ())
 
@@ -35,6 +59,14 @@ class Key():
         RELEASED = 0x02
         LONG_PRESSED = 0x04
 
+    class MsgType():
+        MSG_TYPE_EXIT_CB = 0x01
+        MSG_TYPE_TIMER_CB = 0x02
+
+    class WorkMode():
+        ONE_SHOT = 0x01
+        CONTINUOUS = 0x02
+
     class Error(Exception):
         def __init__(self, value):
             self.value = value
@@ -42,8 +74,10 @@ class Key():
         def __str__(self):
             return repr(self.value)
 
-    def __init__(self, pin, level_on_pressed, cared_event, event_cb, long_press_event = []):
+    def __init__(self, pin, work_mode, debounse_ms, level_on_pressed, cared_event, event_cb, long_press_event = []):
         self.pin = pin
+        self.work_mode = work_mode
+        self.debounse_ms = debounse_ms
         if level_on_pressed == 0:
             self.exti_pull = ExtInt.PULL_PU
             if cared_event == self.Event.PRESSED:
@@ -80,36 +114,17 @@ class Key():
         self.sec += 1
         for n in self.long_press_event:
             if self.sec == n:
-                key_evt_queue.put((self, self.Event.LONG_PRESSED))
+                key_evt_queue.put((self, self.MsgType.MSG_TYPE_TIMER_CB, self.Event.LONG_PRESSED))
                 break
 
     def exit_cb(self, args):
+        self.disable()
+        key_evt_queue.put((self, self.MsgType.MSG_TYPE_EXIT_CB, args))
+
+    def disable(self):
         self.exti.disable()
-        sleep_ms(20)
-        gpio = Pin(args[0], Pin.IN, Pin.PULL_PU, 1)
-        level = gpio.read()
-        event = None
 
-        if self.level_on_pressed == 0:
-            if level == 0:
-                event = self.Event.PRESSED
-            else:
-                event = self.Event.RELEASED
-        else:
-            if level == 1:
-                event = self.Event.PRESSED
-            else:
-                event = self.Event.RELEASED
-
-        if event & self.cared_event:
-            key_evt_queue.put((self, event))
-
-        if event == self.Event.PRESSED:
-            self.sec = 0
-            self.timer.start(1000, 1, self.timer_cb)
-        else:
-            self.timer.stop()
-
+    def enable(self):
         self.exti = ExtInt(self.pin, self.exti_trigger_mode, self.exti_pull, self.exit_cb)
         self.exti.enable()
 
@@ -125,5 +140,5 @@ if __name__ == '__main__':
         else:
             print("%s is pressed for %d seconds" % ("k1" if k.pin == k1 else "k2", k.sec))
 
-    Key(k1, 0, Key.Event.PRESSED | Key.Event.RELEASED, event_cb)
-    Key(k2, 0, Key.Event.PRESSED | Key.Event.RELEASED, event_cb, [2, 4, 6])
+    Key(k1, Key.WorkMode.CONTINUOUS, 20, 0, Key.Event.PRESSED | Key.Event.RELEASED, event_cb)
+    Key(k2, Key.WorkMode.CONTINUOUS, 20, 0, Key.Event.PRESSED | Key.Event.RELEASED, event_cb, [2, 4, 6])
